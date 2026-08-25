@@ -70,6 +70,14 @@ MCP 全称 **模型上下文协议（Model Context Protocol）**，由 Anthropic
 
 想深入了解？看 [官方介绍](https://www.anthropic.com/news/model-context-protocol)。
 
+**2025–2026 重要进展**（截至 2026 年 8 月）：
+
+- **中立治理**：2025 年 12 月 Anthropic 将 MCP 捐赠给 Linux 基金会旗下新成立的 Agentic AI Foundation（AAIF，Anthropic、OpenAI、Block 共同发起），OpenAI 同时捐出 AGENTS.md，MCP 正式成为中立的行业标准。
+- **2026-07-28 新版规范**：最重要的一次升级——协议核心改为**无状态**请求 / 响应（去掉 initialize 握手与 `Mcp-Session-Id`，请求可落在任意服务器实例）、多轮往返请求（MRTR，工具中途向用户要输入）、`Mcp-Method` / `Mcp-Name` 头部路由、可缓存的 list 结果、授权加固（RFC 9207、CIMD）、正式的扩展框架（Tasks 升级为官方扩展）与弃用政策（Roots / Sampling / Logging 进入 12 个月弃用期，旧版 HTTP+SSE 传输弃用）。详见 [官方博客](https://blog.modelcontextprotocol.io/posts/2026-07-28/) 与 [规范全文](https://modelcontextprotocol.io/specification/2026-07-28)。
+- **MCP Apps**：服务器可向宿主返回可交互 UI（表单、可视化）而非纯文本，Claude、ChatGPT 等宿主已支持。
+- **全面普及**：Claude / Claude Code、ChatGPT & Codex、Gemini CLI、Cursor、VS Code、DeepSeek Harness（dsh）等全部原生支持；官方 Registry + Glama（19,000+）、mcp.so（16,000+）等目录收录的服务器已达数万量级。
+- **与 Agent Skills 互补**：MCP 负责"连接工具与数据"，[Agent Skills](https://agentskills.io/) 负责"教会 Agent 怎么做"，两者已成为 Agent 生态的两大开放标准。
+
 微软出的面向初学者的 Model Context Protocol (MCP) 课程也不错，推荐一下：
 - [mcp-for-beginners](https://github.com/microsoft/mcp-for-beginners)
 
@@ -226,6 +234,12 @@ MCP 客户端是 AI 的“操作台”，以下是几个热门选择：
   - [awesome-mcp-clients](https://github.com/punkpeye/awesome-mcp-clients)
 
 ---
+- **DeepSeek Harness (dsh)**  
+  - **简介**：DeepSeek 官方开源的 Agent 框架（2026-08-13 发布，MIT），"一切皆插件"，两周内即突破 19 万 star。  
+  - **功能**：内置 MCP 客户端桥接第三方工具服务器；兼容 Claude Code / Codex 的 Hook 协议与 Agent Skills；`npx @deepseek-ai/dsh web` 启动本地 Web UI，默认接 DeepSeek-V4，也可接任意 OpenAI 兼容端点。  
+  - **链接**：[deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)  
+  - **Tips**：DeepSeek-V4 同时兼容 OpenAI 与 Anthropic 协议，把 Claude Code / Cursor / Cline 等 MCP 客户端的模型换成 `deepseek-v4-pro` 即可使用，工具调用开箱即用；dsh 技能 / 插件精选见 [awesome-dsh-skills](https://github.com/yzfly/awesome-dsh-skills)。
+
 ## MCP 服务器精选列表
 
 模型上下文协议 (MCP) 服务器是赋予 AI 模型与外部工具、数据和系统交互能力的“工具箱”。以下是按不同应用场景精选的 MCP 服务器列表，按场景和质量（官方/参考 > 常用/成熟 > 社区/特定）排序，方便中文用户查找和使用。
@@ -357,7 +371,7 @@ MCP 客户端是 AI 的“操作台”，以下是几个热门选择：
 | [supernovae-st/nika](https://github.com/supernovae-st/nika) | Nika AI 工作流引擎的只读 MCP 服务器（oracle）：在消耗任何 token 之前校验 `.nika.yaml` 工作流 DAG（结构、权限、诚实的成本下限），解释诊断并给出修复指引，可浏览 schema 与示例。设计上不执行、不修改，安全模型随仓库公开。 | 官方实现 (SuperNovae) 🎖️, Rust 开发 🦀, 本地运行 🏠, 跨平台 🍎🐧, 只读预检 oracle, AGPL-3.0。 |
 | [Q00/ouroboros](https://github.com/Q00/ouroboros) | 规约优先的 AI 编码 Agent OS，把 Claude Code、Codex CLI、OpenCode、Gemini CLI 等编码代理的非确定性工作，转换为可回放、可观测、受策略约束的执行契约（Seed → Ledger → Runtime）。先用苏格拉底式访谈把模糊需求问清楚，模糊度高于阈值 0.2 会挡住 seed 生成（显式传入 force 才能通过），再驱动执行、分层评估（Mechanical → Semantic → 多模型共识；三层齐跑只在直接评估路径上成立，演化循环只跑 Semantic 一层）和有预算上限的演化循环。当一条验收标准定义了自己的 verify_command 或期望输出时，那些值不会进执行 worker 的契约块，避免模型照着答案糊弄。 | 社区实现, Python 开发 🐍, 本地运行 🏠, 跨平台 🍎🪟🐧, 30+ 个 MCP 工具（访谈 / Seed 生成 / 执行 / 评估 / 演化 / 会话状态）, 适配 13 个运行时, 提供中文 README, MIT, `pipx install 'ouroboros-ai[mcp]'`（MCP 服务器在 `[mcp]` extra 里，装基础包不含 MCP 运行时）。 |
 | [flameox](https://github.com/morluto/flameox) | 面向智能体的性能分析与优化工具包：可采集追踪、对比运行，并保留原生运行时证据，用于定位应用、原生服务、GPU 内核和推理负载中的瓶颈。 | 社区实现, Python 开发 🐍, 本地运行 🏠, CLI + MCP, 运行时性能分析与证据对比。 |
-| [UIZZE](https://github.com/uizze/uizze) | 面向 Codex、Claude Code、Cursor、Copilot 等编程代理的 UI 质量检查 MCP 与 Skill：通过匿名预览检查渲染后的 HTML/CSS，识别交互不完整、缺少必要状态、颜色令牌漂移和通用 UI 线索；无需账号或令牌，也不会上传源代码。 | 官方服务, 远程 Streamable HTTP ☁️, UI 质量检查；预览端点：[uizze.com/mcp/preview](https://uizze.com/mcp/preview)，提供确定性的 `check_ui_slop` 工具；完整 UIZZE 另提供基于 800,000+ 个真实 Web 和 iOS 界面的检索与审查能力。 |
+| [UIZZE](https://github.com/uizze/uizze) | 面向 Codex、Claude Code、Cursor、Copilot 等编程代理的 UI 参考检索 MCP 与 Skill：提供 `find_ui_references`（检索真实 Web / iOS 界面参考）与 `find_ui_materials` 两个工具，基于 800,000+ 个真实界面；另提供 `anti-ui-slop`、`ui-design`、`ui-radar`、`ui-slop-score` 四个免费公开 Skill。 | 官方服务, 远程 Streamable HTTP ☁️ `https://uizze.com/mcp`（OAuth2 或 Bearer Token），UI 设计参考检索；元数据 `uizze.com/.well-known/mcp.json`。 |
 | [SunflowersLwtech/covate](https://github.com/SunflowersLwtech/covate) | AI 编程助手的「学习边车」：对 AI 生成的代码改动自动出题，让开发者在接受前先证明自己看懂了逻辑、安全与性能影响；同时维护一份项目级的调试记忆，供后续会话查询。提供简体、繁体中文 README。 | 社区实现，Python 开发 🐍，本地运行 🏠（stdio / Docker），跨平台 🍎🪟🐧，MIT 许可，面向 AI 编程场景下的技能留存 |
 | [AI Developer Toolkit MCP](https://github.com/mjaskolski/developer-toolkit-mcp) | 只读远程 MCP 端点，覆盖 950+ 篇 AI 辅助开发指南（Cursor、Claude Code、Codex），英文+波兰文：`search` 关键词检索，`fetch` 获取全文 Markdown。无需账号、无需 API key。 | 官方实现 (Wondel.ai) 🎖️, 云服务 ☁️, 远程 Streamable HTTP (`developertoolkit.ai/mcp`), 官方 MCP Registry, 2 个只读工具。 |
 | [Speculative-MCP](https://github.com/VoDaiLocz/speculative-mcp) | 通用高性能 MCP 推测执行代理中间件 (Speculative Tool Execution Proxy)，并行预取只读工具结果，降低 AI Agent 40%+ 的 I/O 阻塞延迟。 | 社区实现, Python 开发 🐍, 本地运行 🏠, 跨平台 🍎🪟🐧, 推测执行代理与性能优化, MIT。 |
@@ -531,6 +545,8 @@ MCP 客户端是 AI 的“操作台”，以下是几个热门选择：
 
 | 名称                                                                 | 中文介绍                                                                                           | 备注                                                                                        |
 | :------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------ |
+| [Secret MCP](https://github.com/yyeongjin/secret_mcp) | 搜索近期 GDWEB 设计参考，并通过 MCP Sampling 将每个结果转换为可直接用于实现的设计规格。 | 社区实现, TypeScript 开发 📇, 本地运行 🏠, MIT, 官方 MCP Registry `io.github.yyeongjin/secret-mcp`, `npx -y secret-design-mcp`。 |
+| [AdMapix](https://github.com/fly0pants/admapix) | 广告创意检索 MCP：按关键词、平台、国家、语言和日期搜索全球广告素材并返回结构化数据，适合竞品广告研究与市场分析（工具 `search_creatives`）。 | 社区实现, Python 开发 🐍, 本地运行 🏠, `pip install admapix-mcp`, 需 AdMapix API Key。 |
 | [Alibaba Cloud OpenSearch](https://github.com/aliyun/alibabacloud-opensearch-mcp-server) | 阿里云 OpenSearch 官方集成，AI 代理通过标准化接口与 OpenSearch 交互的工具。                      | 官方实现 (Alibaba Cloud) 🎖️, 阿里云搜索服务。                                              |
 | [Exa](https://github.com/exa-labs/exa-mcp-server)                    | Exa 官方集成，使用专为 AI 设计的 Exa 搜索引擎进行搜索。                                             | 官方实现 (Exa) 🎖️, TypeScript 开发 📇, 云服务 ☁️, AI 专用搜索引擎。                         |
 | [Find MCP](https://github.com/agentage/find-mcp)                     | 搜索 17,000+ 个 MCP 服务器 (与官方 MCP Registry 实时同步)，支持云端 Streamable HTTP 与本地 stdio 两种接入方式。 | 官方实现 (agentage) 🎖️, TypeScript 开发 📇, 云端/本地 🏠☁️, MCP 服务器搜索与发现。 |
@@ -959,7 +975,6 @@ MCP 客户端是 AI 的“操作台”，以下是几个热门选择：
 
 | 名称                                                                               | 中文介绍                                                                                              | 备注                                                                                                     |
 | :--------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
-| [BDE Score](https://github.com/hbhqq9/bde-score) | 多因子量化股票分析 MCP 服务器（美股/港股/A股），透明0-100综合评分，EU AI Act Art.50合规，Streamable HTTP传输 | 社区实现，Python 开发 🐍，本地/云端 ☁️，支持 US/HK/CN A股 |
 | [BICScan](https://github.com/ahnlabio/bicscan-mcp)                                 | 获取 EVM 区块链地址（EOA, CA, ENS）甚至域名的风险评分/资产持有情况。 (BICScan 官方) (已在金融部分列出)       | 官方实现 (AhnLab) 🎖️, Python 开发 🐍, 云服务 ☁️, 区块链地址风险分析。                                 |
 | [Semgrep](https://github.com/semgrep/mcp)                                        | Semgrep 官方集成，让 AI 代理使用 Semgrep 进行代码安全扫描。 (已在开发工具列出)                            | 官方实现 (Semgrep) 🎖️, TypeScript 开发 📇, 云服务 ☁️, 代码安全扫描。                                 |
 | [13bm/GhidraMCP](https://github.com/13bm/GhidraMCP)                                | 集成 Ghidra 进行二进制分析，支持函数检查、反编译、内存探索、导入/导出分析等。                              | 社区实现, Python+Java 开发 🐍☕, 本地运行 🏠, 二进制逆向工程 (Ghidra)。                               |
@@ -1067,6 +1082,7 @@ MCP 客户端是 AI 的“操作台”，以下是几个热门选择：
 
 | 名称                                                                               | 中文介绍                                                                                                     | 备注                                                                                                       |
 | :--------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| [Worklittle Jobs MCP](https://github.com/worklittle/jobs-mcp) | 求职 MCP：检索 400 万+ 职位，支持签证、薪资、距离等筛选，可在 AI 应用内"滑动申请"并保存到 Worklittle 账户。 | 官方实现 (Worklittle) 🎖️, 云服务 ☁️, 远程 MCP `https://mcp.worklittle.com/`, OAuth 认证, npm / PyPI `worklittle`。 |
 | [morluto/jacobian](https://github.com/morluto/jacobian)                         | 面向可组合数学的 MCP 服务器、CLI 和 Python 库：支持多项式映射、线性代数与图算法的精确计算和猜想检验。   | 社区实现, Python 开发 🐍, 本地运行 🏠, 数学计算与猜想检验。                          |
 | [ActableSite](https://github.com/unitedideas/actablesite-mcp)                     | 只读审计公开网站的业务可识别性、语义路径和行动入口，并检查 OpenAI、Anthropic、Perplexity 与 Google 的 8 个 AI 爬虫 robots.txt 策略。 | 官方实现, JavaScript 开发 📇, 云服务/本地桥接 ☁️🏠, Streamable HTTP + stdio, 无需认证, 3 个只读工具, MIT。 |
 | [agentic-ads](https://github.com/nicofains1/agentic-ads)                         | agentic-ads 是 MCP 服务器的广告变现 SDK。发布者通过在 Base 上使用 USDC 的上下文关联广告获得 70% 收入分享。   | 官方实现, TypeScript 开发 📇, 云服务 ☁️, 270 个测试通过, MIT 许可, 广告变现。                          |
@@ -1153,7 +1169,7 @@ MCP 客户端是 AI 的“操作台”，以下是几个热门选择：
 
 ### 更多 MCP Server 资源
 
-* [MCP.so](https://mcp.so/) 收录了近 8000 MCP Servers
+* [MCP.so](https://mcp.so/) 收录了 16,000+ MCP Servers
 
 ![](https://files.mdnice.com/user/43439/4f1c6e0d-f1b3-423c-b069-fa2c502d8557.png)
 
@@ -1190,7 +1206,9 @@ MCP 客户端是 AI 的“操作台”，以下是几个热门选择：
 想玩转 MCP？这些资源帮你省时间：
 
 - **官方文档**  
-  - [MCP 官网](https://www.claudemcp.com/)  
+  - [MCP 官网](https://modelcontextprotocol.io/)（协议规范、SDK、教程）  
+  - [MCP 官方博客](https://blog.modelcontextprotocol.io/)（规范更新说明）  
+  - [MCP Registry](https://registry.modelcontextprotocol.io/)（官方服务器注册中心）  
   - [Anthropic MCP 介绍](https://www.anthropic.com/news/model-context-protocol)  
 
 
